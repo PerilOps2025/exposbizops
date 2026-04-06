@@ -10,28 +10,26 @@ export default function PulseView() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const { data } = await supabase
-        .from('active_tasks')
-        .select('*')
-        .in('status', ['Active', 'Overdue', 'WaitingOn', 'Blocked'])
-        .order('priority', { ascending: true })
-        .order('due_date', { ascending: true });
-      
-      // Sort: overdue first, then high priority
-      const sorted = (data || []).sort((a, b) => {
-        const aOverdue = isOverdue(a.due_date, a.status) ? 0 : 1;
-        const bOverdue = isOverdue(b.due_date, b.status) ? 0 : 1;
-        if (aOverdue !== bOverdue) return aOverdue - bOverdue;
-        const pOrder: Record<string, number> = { High: 0, Med: 1, Low: 2 };
-        return (pOrder[a.priority || 'Med'] || 1) - (pOrder[b.priority || 'Med'] || 1);
-      });
-      setTasks(sorted);
-      setLoading(false);
-    };
-    fetchTasks();
-  }, []);
+  const fetchTasks = async () => {
+    const { data } = await supabase
+      .from('active_tasks')
+      .select('*')
+      .in('status', ['Active', 'Overdue', 'WaitingOn', 'Blocked'])
+      .order('priority', { ascending: true })
+      .order('due_date', { ascending: true });
+    
+    const sorted = (data || []).sort((a, b) => {
+      const aOverdue = isOverdue(a.due_date, a.status) ? 0 : 1;
+      const bOverdue = isOverdue(b.due_date, b.status) ? 0 : 1;
+      if (aOverdue !== bOverdue) return aOverdue - bOverdue;
+      const pOrder: Record<string, number> = { High: 0, Med: 1, Low: 2 };
+      return (pOrder[a.priority || 'Med'] || 1) - (pOrder[b.priority || 'Med'] || 1);
+    });
+    setTasks(sorted);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchTasks(); }, []);
 
   const overdueTasks = tasks.filter(t => isOverdue(t.due_date, t.status));
   const waitingTasks = tasks.filter(t => t.status === 'WaitingOn');
@@ -51,7 +49,7 @@ export default function PulseView() {
             <h4 className="text-sm font-semibold text-destructive">Overdue ({overdueTasks.length})</h4>
           </div>
           <div className="space-y-2">
-            {overdueTasks.map(t => <TaskCard key={t.id} task={t} showOverdue />)}
+            {overdueTasks.map(t => <TaskCard key={t.id} task={t} showOverdue onTaskCompleted={fetchTasks} />)}
           </div>
         </div>
       )}
@@ -63,7 +61,7 @@ export default function PulseView() {
             <h4 className="text-sm font-semibold text-warning">Waiting On ({waitingTasks.length})</h4>
           </div>
           <div className="space-y-2">
-            {waitingTasks.map(t => <TaskCard key={t.id} task={t} />)}
+            {waitingTasks.map(t => <TaskCard key={t.id} task={t} onTaskCompleted={fetchTasks} />)}
           </div>
         </div>
       )}
@@ -72,7 +70,7 @@ export default function PulseView() {
         <div>
           <h4 className="text-sm font-semibold mb-3">🔴 High Priority ({highPriority.length})</h4>
           <div className="space-y-2">
-            {highPriority.map(t => <TaskCard key={t.id} task={t} />)}
+            {highPriority.map(t => <TaskCard key={t.id} task={t} onTaskCompleted={fetchTasks} />)}
           </div>
         </div>
       )}
@@ -81,7 +79,7 @@ export default function PulseView() {
         <div>
           <h4 className="text-sm font-semibold mb-3">Active Tasks ({otherTasks.length})</h4>
           <div className="space-y-2">
-            {otherTasks.map(t => <TaskCard key={t.id} task={t} />)}
+            {otherTasks.map(t => <TaskCard key={t.id} task={t} onTaskCompleted={fetchTasks} />)}
           </div>
         </div>
       )}
