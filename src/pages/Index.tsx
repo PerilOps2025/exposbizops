@@ -1,16 +1,41 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import AuthGate from "@/components/AuthGate";
+import AppLayout from "@/components/AppLayout";
+import RecordTab from "@/components/RecordTab";
+import PendingRoom from "@/components/PendingRoom";
+import DashboardView from "@/components/dashboard/DashboardView";
+import MeetingTab from "@/components/MeetingTab";
+import ConfigTab from "@/components/ConfigTab";
+import NewTaskModal from "@/components/NewTaskModal";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+export default function Index() {
+  const [activeTab, setActiveTab] = useState("record");
+  const [showNewTask, setShowNewTask] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = () => setRefreshKey(k => k + 1);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <AuthGate>
+      <AppLayout
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onNewTask={() => setShowNewTask(true)}
+      >
+        {activeTab === "record" && (
+          <RecordTab onItemsParsed={() => { setActiveTab("pending"); refresh(); }} />
+        )}
+        {activeTab === "pending" && <PendingRoom key={refreshKey} />}
+        {activeTab === "dashboard" && <DashboardView key={refreshKey} />}
+        {activeTab === "meeting" && <MeetingTab />}
+        {activeTab === "config" && <ConfigTab />}
+      </AppLayout>
+
+      <NewTaskModal
+        open={showNewTask}
+        onClose={() => setShowNewTask(false)}
+        onCreated={refresh}
+      />
+    </AuthGate>
   );
-};
-
-const Index = PlaceholderIndex;
-
-export default Index;
+}
