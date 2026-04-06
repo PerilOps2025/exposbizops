@@ -63,7 +63,7 @@ export default function PulseView() {
             <h4 className="text-sm font-semibold text-warning">Waiting On ({waitingTasks.length})</h4>
           </div>
           <div className="space-y-2">
-            {waitingTasks.map(t => <TaskCard key={t.id} task={t} />)}
+            {waitingTasks.map(t => <TaskCard key={t.id} task={t} onTaskCompleted={fetchTasks} />)}
           </div>
         </div>
       )}
