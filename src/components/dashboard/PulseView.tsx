@@ -72,7 +72,7 @@ export default function PulseView() {
         <div>
           <h4 className="text-sm font-semibold mb-3">🔴 High Priority ({highPriority.length})</h4>
           <div className="space-y-2">
-            {highPriority.map(t => <TaskCard key={t.id} task={t} />)}
+            {highPriority.map(t => <TaskCard key={t.id} task={t} onTaskCompleted={fetchTasks} />)}
           </div>
         </div>
       )}
