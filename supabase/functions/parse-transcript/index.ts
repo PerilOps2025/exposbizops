@@ -130,7 +130,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: systemPrompt + entityContext },
+          { role: "system", content: systemPrompt + entityContext + `\n\nTODAY'S DATE: ${new Date().toISOString().split("T")[0]} (use this to resolve relative dates like 'tomorrow', 'next Monday', etc.)` },
           { role: "user", content: `Parse this voice transcript:\n\n"${transcript}"` },
         ],
       }),
