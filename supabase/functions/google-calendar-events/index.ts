@@ -94,6 +94,7 @@ serve(async (req) => {
       singleEvents: "true",
       orderBy: "startTime",
       maxResults: "50",
+      conferenceDataVersion: "1",
     });
 
     const calRes = await fetch(
