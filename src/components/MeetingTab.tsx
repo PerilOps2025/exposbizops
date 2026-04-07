@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, Clock, Users, FileText, CheckCircle, Link2, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, Clock, Users, FileText, CheckCircle, Link2, ExternalLink, RefreshCw, ChevronDown, ChevronUp, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ interface CalendarEvent {
   attendees: { email: string; name: string; responseStatus: string }[];
   location: string | null;
   htmlLink: string;
+  meetLink: string | null;
 }
 
 interface MeetingBrief {
@@ -254,6 +255,17 @@ export default function MeetingTab() {
                                 </span>
                               )}
                             </div>
+                            {event.meetLink && (
+                              <a
+                                href={event.meetLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 mt-1 text-xs font-medium text-primary hover:underline"
+                              >
+                                <Video className="w-3 h-3" /> Join Meet
+                              </a>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             {brief && (brief.relatedTasks.length > 0 || brief.relatedDecisions.length > 0) && (

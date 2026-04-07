@@ -94,6 +94,7 @@ serve(async (req) => {
       singleEvents: "true",
       orderBy: "startTime",
       maxResults: "50",
+      conferenceDataVersion: "1",
     });
 
     const calRes = await fetch(
@@ -121,6 +122,7 @@ serve(async (req) => {
       })),
       location: e.location || null,
       htmlLink: e.htmlLink,
+      meetLink: e.hangoutLink || e.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === "video")?.uri || null,
     }));
 
     return new Response(JSON.stringify({
