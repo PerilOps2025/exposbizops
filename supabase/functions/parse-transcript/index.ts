@@ -12,11 +12,12 @@ ENTITY EXTRACTION RULES:
 - Person: Names NOT followed by the word 'team'. e.g. Jaya, Kishore, Rajan
 - Team/Department: Names followed by 'team'. e.g. 'Procurement team', 'Prolance team'
 - Project: Named initiatives without 'team'. e.g. 'Finance app', 'Prolance tool'
+- Email: Extract any email addresses mentioned (e.g. john@example.com). Associate them with CalendarEvent items as attendees.
 
 CLASSIFICATION:
 - Task: Action items someone needs to do
 - Decision: Conclusions or choices made
-- CalendarEvent: Scheduled meetings or events with explicit time references
+- CalendarEvent: Scheduled meetings or events with explicit time references. Extract attendee emails if mentioned.
 
 PRIORITY INFERENCE:
 - High: urgent, ASAP, critical, immediately, escalate
@@ -45,7 +46,8 @@ OUTPUT: Return ONLY valid JSON matching this schema exactly:
       "due_is_vague": false,
       "is_meeting_context": false,
       "invite_person": false,
-      "calendar_event_title": "null or title",
+      "calendar_event_title": "null or title for the calendar event",
+      "email": ["attendee@example.com"],
       "blocked_by_description": "null or description",
       "raw_fragment": "portion of original transcript"
     }
@@ -201,6 +203,7 @@ serve(async (req) => {
         is_meeting_context: item.is_meeting_context || false,
         invite_person: item.invite_person || false,
         calendar_event_title: item.calendar_event_title || null,
+        email: item.email || [],
         blocked_by_desc: item.blocked_by_description || null,
         status: "Pending",
       };
