@@ -1,9 +1,11 @@
-import { useState, useRef, useCallback } from "react";
-import { Mic, MicOff, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Mic, MicOff, Loader2, CheckCircle2, AlertCircle, Send, WifiOff, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { enqueueTranscript, getAllQueued, removeQueued, getQueueCount } from "@/lib/offline-queue";
 
 type ProcessingStep = 'idle' | 'recording' | 'transcribing' | 'sending' | 'parsing' | 'done' | 'error';
 
@@ -25,7 +27,46 @@ export default function RecordTab({ onItemsParsed }: RecordTabProps) {
   const [step, setStep] = useState<ProcessingStep>('idle');
   const [transcript, setTranscript] = useState("");
   const [itemCount, setItemCount] = useState(0);
+  const [textInput, setTextInput] = useState("");
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [queuedCount, setQueuedCount] = useState(0);
+  const [syncing, setSyncing] = useState(false);
   const recognitionRef = useRef<any>(null);
+
+  // Online/offline detection
+  useEffect(() => {
+    const goOnline = () => { setIsOnline(true); syncQueue(); };
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    refreshQueueCount();
+    return () => { window.removeEventListener("online", goOnline); window.removeEventListener("offline", goOffline); };
+  }, []);
+
+  const refreshQueueCount = async () => {
+    const count = await getQueueCount();
+    setQueuedCount(count);
+  };
+
+  const syncQueue = async () => {
+    const items = await getAllQueued();
+    if (items.length === 0) return;
+    setSyncing(true);
+    let synced = 0;
+    for (const item of items) {
+      try {
+        await processTranscript(item.text, true);
+        await removeQueued(item.id!);
+        synced++;
+      } catch { break; }
+    }
+    setSyncing(false);
+    await refreshQueueCount();
+    if (synced > 0) {
+      toast.success(`Synced ${synced} offline transcript(s)`);
+      onItemsParsed();
+    }
+  };
 
   const startRecording = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -63,9 +104,8 @@ export default function RecordTab({ onItemsParsed }: RecordTabProps) {
 
     recognition.onend = () => {
       if (step === 'recording') {
-        // Auto-stopped, process the transcript
         if (finalTranscript.trim()) {
-          processTranscript(finalTranscript.trim());
+          handleSubmitTranscript(finalTranscript.trim());
         } else {
           setStep('idle');
           toast.error("No speech detected");
@@ -84,16 +124,43 @@ export default function RecordTab({ onItemsParsed }: RecordTabProps) {
       setStep('transcribing');
       recognitionRef.current.stop();
       recognitionRef.current = null;
-      // onend handler will trigger processTranscript
     }
   }, []);
 
-  const processTranscript = async (text: string) => {
+  const handleSubmitTranscript = async (text: string) => {
+    if (!navigator.onLine) {
+      await enqueueTranscript({ text, source: "voice", createdAt: new Date().toISOString() });
+      await refreshQueueCount();
+      setStep('idle');
+      toast.info("You're offline. Transcript queued and will sync when you reconnect.");
+      return;
+    }
+    await processTranscript(text, false);
+  };
+
+  const handleTextSubmit = async () => {
+    const text = textInput.trim();
+    if (!text) return;
+
+    if (!navigator.onLine) {
+      await enqueueTranscript({ text, source: "text", createdAt: new Date().toISOString() });
+      await refreshQueueCount();
+      setTextInput("");
+      toast.info("You're offline. Transcript queued and will sync when you reconnect.");
+      return;
+    }
+
+    setStep('sending');
+    setTranscript(text);
+    setTextInput("");
+    await processTranscript(text, false);
+  };
+
+  const processTranscript = async (text: string, silent: boolean) => {
     try {
-      // Save to master_log
-      setStep('sending');
+      if (!silent) setStep('sending');
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { toast.error("Not authenticated"); setStep('error'); return; }
+      if (!user) { if (!silent) { toast.error("Not authenticated"); setStep('error'); } return; }
 
       const { data: logEntry, error: logError } = await supabase
         .from('master_log')
@@ -103,8 +170,7 @@ export default function RecordTab({ onItemsParsed }: RecordTabProps) {
 
       if (logError) throw logError;
 
-      // Call AI parsing edge function
-      setStep('parsing');
+      if (!silent) setStep('parsing');
       const { data: parseResult, error: parseError } = await supabase.functions.invoke('parse-transcript', {
         body: { transcript: text, masterLogId: logEntry.id }
       });
@@ -112,21 +178,25 @@ export default function RecordTab({ onItemsParsed }: RecordTabProps) {
       if (parseError) throw parseError;
 
       const items = parseResult?.items || [];
-      setItemCount(items.length);
+      if (!silent) setItemCount(items.length);
 
-      // Update master_log
       await supabase
         .from('master_log')
         .update({ processed_by: 'gemini', inbox_refs: items.map((i: any) => i.inbox_id) })
         .eq('id', logEntry.id);
 
-      setStep('done');
-      toast.success(`${items.length} item(s) ready in Pending Room`);
-      onItemsParsed();
+      if (!silent) {
+        setStep('done');
+        toast.success(`${items.length} item(s) ready in Pending Room`);
+        onItemsParsed();
+      }
     } catch (err: any) {
       console.error("Processing error:", err);
-      toast.error(err.message || "Failed to process transcript");
-      setStep('error');
+      if (!silent) {
+        toast.error(err.message || "Failed to process transcript");
+        setStep('error');
+      }
+      throw err;
     }
   };
 
@@ -143,11 +213,25 @@ export default function RecordTab({ onItemsParsed }: RecordTabProps) {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] p-6">
-      <div className="text-center max-w-md mx-auto">
+      <div className="text-center max-w-md mx-auto w-full">
         <h2 className="text-2xl font-bold mb-2">Voice Capture</h2>
-        <p className="text-muted-foreground text-sm mb-8">
-          Speak naturally — AI will parse your tasks, decisions, and calendar events.
+        <p className="text-muted-foreground text-sm mb-6">
+          Speak naturally or type below — AI will parse your tasks, decisions, and calendar events.
         </p>
+
+        {/* Offline / Queue indicator */}
+        {(!isOnline || queuedCount > 0) && (
+          <div className={`flex items-center justify-center gap-2 mb-4 text-xs font-medium rounded-full px-3 py-1.5 mx-auto w-fit ${
+            !isOnline ? "bg-warning/15 text-warning" : "bg-primary/10 text-primary"
+          }`}>
+            {!isOnline ? <WifiOff className="w-3.5 h-3.5" /> : <Wifi className="w-3.5 h-3.5" />}
+            {!isOnline
+              ? `Offline — ${queuedCount} queued`
+              : syncing
+                ? "Syncing queued transcripts..."
+                : `${queuedCount} queued transcript(s)`}
+          </div>
+        )}
 
         {/* Record Button */}
         <button
@@ -213,6 +297,27 @@ export default function RecordTab({ onItemsParsed }: RecordTabProps) {
             <p className="text-sm">{transcript}</p>
           </Card>
         )}
+
+        {/* Text Input */}
+        <Card className="mt-6 p-4 text-left">
+          <p className="text-xs text-muted-foreground mb-2 font-medium">Or type your transcript</p>
+          <Textarea
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="e.g. Follow up with Sarah on the Q3 budget by Friday. Decision: we'll use vendor A for the new project."
+            className="min-h-[80px] mb-3 text-sm"
+            disabled={isProcessing}
+          />
+          <Button
+            onClick={handleTextSubmit}
+            disabled={!textInput.trim() || isProcessing}
+            size="sm"
+            className="gap-1.5 w-full"
+          >
+            <Send className="w-3.5 h-3.5" />
+            {!isOnline ? "Queue for later" : "Process transcript"}
+          </Button>
+        </Card>
       </div>
     </div>
   );
