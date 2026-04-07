@@ -74,18 +74,50 @@ export default function PendingRoom() {
 
       if (merged.type === 'Task' || merged.type === 'CalendarEvent') {
         const taskId = await generateId('TASK', 'active_tasks', 'task_id');
+
+        // For CalendarEvent, also create a Google Calendar event
+        let calendarEventId: string | null = null;
+        if (merged.type === 'CalendarEvent') {
+          try {
+            const { data: session } = await supabase.auth.getSession();
+            const calRes = await supabase.functions.invoke('create-calendar-event', {
+              body: {
+                title: (merged as any).calendar_event_title || merged.parsed_text || 'New Event',
+                description: merged.parsed_text || '',
+                startDate: merged.due_date || null,
+                startTime: merged.due_time || null,
+                endDate: merged.due_date || null,
+                endTime: null,
+                attendeeEmails: merged.email || [],
+              },
+            });
+            if (calRes.error) {
+              console.error('Calendar event creation failed:', calRes.error);
+              toast.error('Calendar event could not be created, but task will be saved');
+            } else if (calRes.data?.eventId) {
+              calendarEventId = calRes.data.eventId;
+              toast.success('Google Calendar event created!');
+            }
+          } catch (calErr) {
+            console.error('Calendar event error:', calErr);
+            toast.error('Calendar sync failed, but task will be saved');
+          }
+        }
+
         const { error } = await supabase.from('active_tasks').insert({
           task_id: taskId,
           user_id: user.id,
           task: merged.parsed_text || '',
           team: merged.team,
           person: merged.person || [],
+          email: merged.email || [],
           priority: merged.priority || 'Med',
           due_date: merged.due_date,
           due_time: merged.due_time,
           is_meeting_context: merged.is_meeting_context || false,
           project_tag: merged.project_tag,
           inbox_ref: merged.inbox_id,
+          calendar_event_id: calendarEventId,
           status: 'Active',
         });
         if (error) throw error;
