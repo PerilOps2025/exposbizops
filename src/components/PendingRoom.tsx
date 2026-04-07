@@ -32,6 +32,9 @@ interface InboxItem {
   gemini_feedback: string | null;
   feedback_detail: string | null;
   master_log_ref: string | null;
+  calendar_event_title: string | null;
+  invite_person: boolean | null;
+  email: string[] | null;
 }
 
 export default function PendingRoom() {
