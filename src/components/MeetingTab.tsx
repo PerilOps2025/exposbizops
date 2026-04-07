@@ -266,7 +266,6 @@ export default function MeetingTab() {
                                 <Video className="w-3 h-3" /> Join Meet
                               </a>
                             )}
-                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             {brief && (brief.relatedTasks.length > 0 || brief.relatedDecisions.length > 0) && (
