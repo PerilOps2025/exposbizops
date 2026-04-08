@@ -89,6 +89,20 @@ export default function MeetingTab() {
     }
   };
 
+  const disconnectCalendar = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("calendar_tokens").delete().eq("user_id", user.id);
+      setConnected(false);
+      setEvents([]);
+      setCalendarEmail(null);
+      toast.success("Calendar disconnected. Reconnect to authorize new permissions.");
+    } catch (err: any) {
+      toast.error("Failed to disconnect: " + err.message);
+    }
+  };
+
   const loadBrief = async (event: CalendarEvent) => {
     if (briefs[event.id]) return;
     setBriefLoading(prev => ({ ...prev, [event.id]: true }));
@@ -200,10 +214,15 @@ export default function MeetingTab() {
             <p className="text-sm text-muted-foreground">Synced with {calendarEmail}</p>
           )}
         </div>
-        {connected ? (
-          <Button variant="outline" size="sm" onClick={fetchEvents} className="gap-1">
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh
-          </Button>
+      {connected ? (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={fetchEvents} className="gap-1">
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh
+            </Button>
+            <Button variant="ghost" size="sm" onClick={disconnectCalendar} className="gap-1 text-destructive hover:text-destructive">
+              Disconnect
+            </Button>
+          </div>
         ) : null}
       </div>
 

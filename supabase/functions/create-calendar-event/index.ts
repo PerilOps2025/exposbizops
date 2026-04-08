@@ -67,7 +67,7 @@ serve(async (req) => {
       });
     }
 
-    const { title, description, startDate, startTime, endDate, endTime, attendeeEmails } = await req.json();
+    const { title, description, startDate, startTime, endDate, endTime, attendeeEmails, addMeetLink } = await req.json();
 
     if (!title) {
       return new Response(JSON.stringify({ error: "Title is required" }), {
@@ -100,13 +100,18 @@ serve(async (req) => {
       summary: title,
       description: description || undefined,
       attendees: (attendeeEmails || []).map((email: string) => ({ email })),
-      conferenceData: {
+    };
+
+    // Only add conference data if Meet link is requested
+    const wantMeet = addMeetLink !== false; // default true
+    if (wantMeet) {
+      eventBody.conferenceData = {
         createRequest: {
           requestId: crypto.randomUUID(),
           conferenceSolutionKey: { type: "hangoutsMeet" },
         },
-      },
-    };
+      };
+    }
 
     if (isAllDay) {
       // All-day event
@@ -134,9 +139,11 @@ serve(async (req) => {
       eventBody.end = { dateTime: `${eDate}T${eTime}:00`, timeZone };
     }
 
-    const calRes = await fetch(
-      "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all",
-      {
+    const calUrl = wantMeet
+      ? "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all"
+      : "https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all";
+
+    const calRes = await fetch(calUrl, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,

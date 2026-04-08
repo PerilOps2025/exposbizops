@@ -50,7 +50,7 @@ export default function AppLayout({ children, activeTab, onTabChange, onNewTask 
         </nav>
         <div className="p-3">
           <Button onClick={onNewTask} className="w-full gap-2" size="sm">
-            <Plus className="w-4 h-4" /> New Task
+            <Plus className="w-4 h-4" /> New Item
           </Button>
         </div>
         <div className="p-4 border-t border-sidebar-border">
