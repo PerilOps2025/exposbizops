@@ -38,7 +38,7 @@ serve(async (req) => {
     const redirectUri = `${Deno.env.get("SUPABASE_URL")}/functions/v1/google-calendar-callback`;
 
     const scopes = [
-      "https://www.googleapis.com/auth/calendar.readonly",
+      "https://www.googleapis.com/auth/calendar",
       "https://www.googleapis.com/auth/userinfo.email",
     ];
 
