@@ -42,6 +42,7 @@ export default function ConfigTab() {
     if (configMap.DIGEST_DAILY_PAUSED !== undefined) setDailyPaused(!!configMap.DIGEST_DAILY_PAUSED);
     if (configMap.DIGEST_WEEKLY_PAUSED !== undefined) setWeeklyPaused(!!configMap.DIGEST_WEEKLY_PAUSED);
     if (configMap.DIGEST_BREAKFAST_PAUSED !== undefined) setBreakfastPaused(!!configMap.DIGEST_BREAKFAST_PAUSED);
+    if (configMap.AI_USAGE) setAiUsage(configMap.AI_USAGE as any);
   };
 
   const saveConfig = async (key: string, value: any) => {
