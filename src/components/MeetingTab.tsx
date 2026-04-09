@@ -37,6 +37,7 @@ export default function MeetingTab() {
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const [briefs, setBriefs] = useState<Record<string, MeetingBrief>>({});
   const [briefLoading, setBriefLoading] = useState<Record<string, boolean>>({});
+  const [postMeetingEvent, setPostMeetingEvent] = useState<CalendarEvent | null>(null);
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
