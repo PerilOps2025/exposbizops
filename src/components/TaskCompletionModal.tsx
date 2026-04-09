@@ -119,7 +119,7 @@ export default function TaskCompletionModal({ open, onClose, task, onCompleted }
         recurrence: task.recurrence || null,
         status: "Done",
         completion_note: note || null,
-        completion_note_type: "text",
+        completion_note_type: tags.meetingContext ? "Meeting Context" : tags.decisionMade ? "Decision Made" : tags.followUpNeeded ? "Follow-up Needed" : "For Record Only",
         completion_tags_person: tags.followUpNeeded ? "follow_up" : null,
         completion_tags_team: tags.meetingContext ? "meeting_context" : null,
         completion_tags_project_tag: tags.decisionMade ? "decision_made" : null,
