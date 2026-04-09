@@ -390,9 +390,9 @@ export default function MeetingTab() {
                                 <p className="text-sm text-muted-foreground text-center py-2">No related context found for this meeting.</p>
                               )}
 
-                              {event.htmlLink && (
-                                <>
-                                  <Separator />
+                              <Separator />
+                              <div className="flex items-center gap-3">
+                                {event.htmlLink && (
                                   <a
                                     href={event.htmlLink}
                                     target="_blank"
@@ -401,8 +401,18 @@ export default function MeetingTab() {
                                   >
                                     <ExternalLink className="w-3 h-3" /> Open in Google Calendar
                                   </a>
-                                </>
-                              )}
+                                )}
+                                {isPast(parseISO(event.end)) && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1 h-7 text-xs"
+                                    onClick={(e) => { e.stopPropagation(); setPostMeetingEvent(event); }}
+                                  >
+                                    <MessageSquare className="w-3 h-3" /> Post-Meeting Notes
+                                  </Button>
+                                )}
+                              </div>
                             </>
                           ) : null}
                         </div>
@@ -415,6 +425,15 @@ export default function MeetingTab() {
           ))}
         </div>
       )}
+
+      <PostMeetingModal
+        open={!!postMeetingEvent}
+        onClose={() => setPostMeetingEvent(null)}
+        meetingTitle={postMeetingEvent?.title || ""}
+        meetingId={postMeetingEvent?.id}
+        attendees={postMeetingEvent?.attendees?.map(a => a.name || a.email) || []}
+        onSaved={fetchEvents}
+      />
     </div>
   );
 }
