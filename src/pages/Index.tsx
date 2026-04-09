@@ -7,17 +7,17 @@ import DashboardView from "@/components/dashboard/DashboardView";
 import MeetingTab from "@/components/MeetingTab";
 import ConfigTab from "@/components/ConfigTab";
 import NewItemModal from "@/components/NewItemModal";
+import HowsMyDay from "@/components/HowsMyDay";
 import { requestNotificationPermission, startNotificationPolling } from "@/lib/notifications";
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState("record");
+  const [activeTab, setActiveTab] = useState("today");
   const [showNewItem, setShowNewItem] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refresh = () => setRefreshKey(k => k + 1);
 
   useEffect(() => {
-    // Request notification permission and start polling
     requestNotificationPermission().then(granted => {
       if (granted) startNotificationPolling();
     });
@@ -30,6 +30,7 @@ export default function Index() {
         onTabChange={setActiveTab}
         onNewTask={() => setShowNewItem(true)}
       >
+        {activeTab === "today" && <HowsMyDay key={refreshKey} onNavigate={setActiveTab} />}
         {activeTab === "record" && (
           <RecordTab onItemsParsed={() => { setActiveTab("pending"); refresh(); }} />
         )}

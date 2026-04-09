@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mic, Inbox, LayoutDashboard, Calendar, Settings, Plus, Menu, X } from "lucide-react";
+import { Mic, Inbox, LayoutDashboard, Calendar, Settings, Plus, Menu, X, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,7 @@ interface AppLayoutProps {
 }
 
 const navItems = [
+  { id: "today", label: "My Day", icon: Sun },
   { id: "record", label: "Record", icon: Mic },
   { id: "pending", label: "Pending", icon: Inbox },
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -25,7 +26,7 @@ export default function AppLayout({ children, activeTab, onTabChange, onNewTask 
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-sidebar border-r border-sidebar-border">
-        <div className="p-6">
+        <div className="p-6 cursor-pointer" onClick={() => onTabChange("today")}>
           <h1 className="text-xl font-bold text-sidebar-primary-foreground tracking-tight">
             <span className="text-sidebar-primary">Ex</span>POS
           </h1>
@@ -64,7 +65,7 @@ export default function AppLayout({ children, activeTab, onTabChange, onNewTask 
           <div className="absolute inset-0 bg-foreground/50" onClick={() => setSidebarOpen(false)} />
           <aside className="relative w-64 bg-sidebar flex flex-col">
             <div className="p-4 flex items-center justify-between">
-              <h1 className="text-lg font-bold text-sidebar-primary-foreground">
+              <h1 className="text-lg font-bold text-sidebar-primary-foreground cursor-pointer" onClick={() => { onTabChange("today"); setSidebarOpen(false); }}>
                 <span className="text-sidebar-primary">Ex</span>POS
               </h1>
               <button onClick={() => setSidebarOpen(false)}>
@@ -99,7 +100,7 @@ export default function AppLayout({ children, activeTab, onTabChange, onNewTask 
           <button onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
-          <h1 className="text-base font-bold">
+          <h1 className="text-base font-bold cursor-pointer" onClick={() => onTabChange("today")}>
             <span className="text-primary">Ex</span>POS
           </h1>
           <button onClick={onNewTask}>
@@ -113,7 +114,7 @@ export default function AppLayout({ children, activeTab, onTabChange, onNewTask 
 
         {/* Mobile bottom tabs */}
         <nav className="md:hidden flex items-center justify-around border-t border-border bg-card py-2 px-1">
-          {navItems.slice(0, 4).map((item) => (
+          {navItems.slice(0, 5).map((item) => (
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
