@@ -207,6 +207,23 @@ export default function ConfigTab() {
           </div>
         </div>
       </Card>
+      {/* AI Usage Tracker */}
+      <Card className="p-4 space-y-3">
+        <h3 className="text-sm font-semibold">AI Usage Tracker</h3>
+        <p className="text-xs text-muted-foreground">Tracks AI parsing calls per day (tokens used via Lovable AI gateway)</p>
+        {Object.keys(aiUsage).length > 0 ? (
+          <div className="space-y-1">
+            {Object.entries(aiUsage).sort(([a], [b]) => b.localeCompare(a)).slice(0, 7).map(([date, data]) => (
+              <div key={date} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
+                <span>{date}</span>
+                <span className="text-muted-foreground">{data.calls} calls · {data.tokens.toLocaleString()} tokens</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No usage data yet</p>
+        )}
+      </Card>
       {/* Data Retention */}
       <DataRetentionCard />
     </div>
