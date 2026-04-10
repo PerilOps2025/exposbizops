@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { X, Calendar, CheckCircle, ListTodo, ArrowRight, Video } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Calendar, CheckCircle, ListTodo, ArrowRight, Video, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +40,22 @@ export default function NewItemModal({ open, onClose, onCreated, defaultType = "
   const [context, setContext] = useState("");
   const [validUntil, setValidUntil] = useState("");
   const [saving, setSaving] = useState(false);
+  // Meeting linking
+  const [linkedMeetingId, setLinkedMeetingId] = useState("");
+  const [upcomingMeetings, setUpcomingMeetings] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (open) loadUpcomingMeetings();
+  }, [open]);
+
+  const loadUpcomingMeetings = async () => {
+    const { data } = await supabase
+      .from("meeting_log")
+      .select("meeting_id, meeting_title, scheduled_start")
+      .order("scheduled_start", { ascending: true })
+      .limit(20);
+    setUpcomingMeetings(data || []);
+  };
 
   if (!open) return null;
 
@@ -47,7 +63,7 @@ export default function NewItemModal({ open, onClose, onCreated, defaultType = "
     setText(""); setPerson(""); setTeam(parentTask?.team || ""); setProjectTag(parentTask?.project_tag || "");
     setPriority("Med"); setDueDate(""); setDueTime(""); setIsMeetingContext(false);
     setEndDate(""); setEndTime(""); setAttendeeEmails(""); setEventTitle("");
-    setAddMeetLink(true); setIsAllDay(false); setContext(""); setValidUntil("");
+    setAddMeetLink(true); setIsAllDay(false); setContext(""); setValidUntil(""); setLinkedMeetingId("");
   };
 
   const handleSave = async (toPending: boolean) => {
