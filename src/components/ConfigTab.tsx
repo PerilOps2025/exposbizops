@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Send, Loader2 } from "lucide-react";
 import DataRetentionCard from "@/components/dashboard/DataRetentionCard";
 
 export default function ConfigTab() {
@@ -22,6 +23,7 @@ export default function ConfigTab() {
   const [weeklyPaused, setWeeklyPaused] = useState(false);
   const [breakfastPaused, setBreakfastPaused] = useState(false);
   const [aiUsage, setAiUsage] = useState<Record<string, { calls: number; tokens: number }>>({});
+  const [sendingDigest, setSendingDigest] = useState<string | null>(null);
 
   useEffect(() => {
     loadConfig();
@@ -80,6 +82,37 @@ export default function ConfigTab() {
     await saveConfig('ENTITY_PROJECTS', updated);
     setNewProject("");
   };
+
+  const sendDigestNow = async (digestType: string) => {
+    if (!digestEmail) {
+      toast.error("Please set a digest email first");
+      return;
+    }
+    setSendingDigest(digestType);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-digest', {
+        body: { digestType },
+      });
+      if (error) throw error;
+      const results = data?.results || [];
+      const sent = results.find((r: any) => r.sent);
+      if (sent) {
+        toast.success(`${digestType} digest sent to ${sent.to}`);
+      } else {
+        const errResult = results[0];
+        toast.error(errResult?.error || errResult?.reason || "Failed to send digest");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send digest");
+    } finally {
+      setSendingDigest(null);
+    }
+  };
+
+  // AI usage stats
+  const todayKey = new Date().toISOString().split('T')[0];
+  const todayUsage = aiUsage[todayKey] || { calls: 0, tokens: 0 };
+  const sortedDays = Object.entries(aiUsage).sort(([a], [b]) => b.localeCompare(a)).slice(0, 7);
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-6">
@@ -147,6 +180,7 @@ export default function ConfigTab() {
           <Button size="sm" onClick={addProject}>Add</Button>
         </div>
       </Card>
+
       {/* Email Digests */}
       <Card className="p-4 space-y-4">
         <h3 className="text-sm font-semibold">Email Digests</h3>
@@ -171,51 +205,100 @@ export default function ConfigTab() {
               <p className="text-sm font-medium">☀️ Breakfast Brief</p>
               <p className="text-xs text-muted-foreground">Daily at 9:00 AM IST (except Sunday)</p>
             </div>
-            <Switch
-              checked={!breakfastPaused}
-              onCheckedChange={v => {
-                setBreakfastPaused(!v);
-                saveConfig('DIGEST_BREAKFAST_PAUSED', !v);
-              }}
-            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost" size="sm"
+                className="h-7 px-2 text-xs gap-1"
+                disabled={sendingDigest === 'breakfast' || !digestEmail}
+                onClick={() => sendDigestNow('breakfast')}
+              >
+                {sendingDigest === 'breakfast' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                Send Now
+              </Button>
+              <Switch
+                checked={!breakfastPaused}
+                onCheckedChange={v => {
+                  setBreakfastPaused(!v);
+                  saveConfig('DIGEST_BREAKFAST_PAUSED', !v);
+                }}
+              />
+            </div>
           </div>
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div>
               <p className="text-sm font-medium">🌙 Daily Digest</p>
               <p className="text-xs text-muted-foreground">Daily at 9:00 PM IST (except Sunday) — Karma & Consequences</p>
             </div>
-            <Switch
-              checked={!dailyPaused}
-              onCheckedChange={v => {
-                setDailyPaused(!v);
-                saveConfig('DIGEST_DAILY_PAUSED', !v);
-              }}
-            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost" size="sm"
+                className="h-7 px-2 text-xs gap-1"
+                disabled={sendingDigest === 'daily' || !digestEmail}
+                onClick={() => sendDigestNow('daily')}
+              >
+                {sendingDigest === 'daily' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                Send Now
+              </Button>
+              <Switch
+                checked={!dailyPaused}
+                onCheckedChange={v => {
+                  setDailyPaused(!v);
+                  saveConfig('DIGEST_DAILY_PAUSED', !v);
+                }}
+              />
+            </div>
           </div>
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div>
               <p className="text-sm font-medium">📊 Weekly Digest</p>
               <p className="text-xs text-muted-foreground">Every Saturday at 9:00 PM IST</p>
             </div>
-            <Switch
-              checked={!weeklyPaused}
-              onCheckedChange={v => {
-                setWeeklyPaused(!v);
-                saveConfig('DIGEST_WEEKLY_PAUSED', !v);
-              }}
-            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost" size="sm"
+                className="h-7 px-2 text-xs gap-1"
+                disabled={sendingDigest === 'weekly' || !digestEmail}
+                onClick={() => sendDigestNow('weekly')}
+              >
+                {sendingDigest === 'weekly' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                Send Now
+              </Button>
+              <Switch
+                checked={!weeklyPaused}
+                onCheckedChange={v => {
+                  setWeeklyPaused(!v);
+                  saveConfig('DIGEST_WEEKLY_PAUSED', !v);
+                }}
+              />
+            </div>
           </div>
         </div>
       </Card>
+
       {/* AI Usage Tracker */}
       <Card className="p-4 space-y-3">
         <h3 className="text-sm font-semibold">AI Usage Tracker</h3>
         <p className="text-xs text-muted-foreground">Tracks AI parsing calls per day (tokens used via Lovable AI gateway)</p>
-        {Object.keys(aiUsage).length > 0 ? (
+        
+        {/* Today's stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+            <p className="text-xs text-muted-foreground">Today's Calls</p>
+            <p className="text-2xl font-bold text-primary">{todayUsage.calls}</p>
+          </div>
+          <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+            <p className="text-xs text-muted-foreground">Today's Tokens</p>
+            <p className="text-2xl font-bold text-primary">{todayUsage.tokens.toLocaleString()}</p>
+          </div>
+        </div>
+        <p className="text-[10px] text-muted-foreground">Resets daily at midnight UTC. Usage is metered via the Lovable AI gateway — check your Lovable plan for limits.</p>
+
+        {sortedDays.length > 0 ? (
           <div className="space-y-1">
-            {Object.entries(aiUsage).sort(([a], [b]) => b.localeCompare(a)).slice(0, 7).map(([date, data]) => (
+            <p className="text-xs font-medium text-muted-foreground">Last 7 days</p>
+            {sortedDays.map(([date, data]) => (
               <div key={date} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
-                <span>{date}</span>
+                <span>{date === todayKey ? 'Today' : date}</span>
                 <span className="text-muted-foreground">{data.calls} calls · {data.tokens.toLocaleString()} tokens</span>
               </div>
             ))}
@@ -224,6 +307,7 @@ export default function ConfigTab() {
           <p className="text-sm text-muted-foreground">No usage data yet</p>
         )}
       </Card>
+
       {/* Data Retention */}
       <DataRetentionCard />
     </div>

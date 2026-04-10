@@ -240,6 +240,7 @@ export type Database = {
           decision_id: string
           decision_text: string
           id: string
+          is_active: boolean
           is_meeting_context: boolean | null
           person: string[] | null
           project_tag: string | null
@@ -248,6 +249,7 @@ export type Database = {
           supersedes_id: string | null
           team: string | null
           user_id: string
+          valid_until: string | null
           visible_in: string[] | null
         }
         Insert: {
@@ -256,6 +258,7 @@ export type Database = {
           decision_id: string
           decision_text: string
           id?: string
+          is_active?: boolean
           is_meeting_context?: boolean | null
           person?: string[] | null
           project_tag?: string | null
@@ -264,6 +267,7 @@ export type Database = {
           supersedes_id?: string | null
           team?: string | null
           user_id: string
+          valid_until?: string | null
           visible_in?: string[] | null
         }
         Update: {
@@ -272,6 +276,7 @@ export type Database = {
           decision_id?: string
           decision_text?: string
           id?: string
+          is_active?: boolean
           is_meeting_context?: boolean | null
           person?: string[] | null
           project_tag?: string | null
@@ -280,6 +285,7 @@ export type Database = {
           supersedes_id?: string | null
           team?: string | null
           user_id?: string
+          valid_until?: string | null
           visible_in?: string[] | null
         }
         Relationships: []
