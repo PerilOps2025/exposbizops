@@ -195,10 +195,45 @@ serve(async (req) => {
 
     const items = parsed.items || [];
 
+    // Try to auto-link meetings based on AI hints
+    const meetingLinkCache: Record<string, string | null> = {};
+    const findMeetingId = async (teamHint: string | null, titleHint: string | null): Promise<string | null> => {
+      const key = `${teamHint}|${titleHint}`;
+      if (key in meetingLinkCache) return meetingLinkCache[key];
+      
+      let meetingId: string | null = null;
+      if (teamHint) {
+        const { data } = await supabase
+          .from("meeting_log")
+          .select("meeting_id")
+          .contains("teams", [teamHint])
+          .order("scheduled_start", { ascending: true })
+          .limit(1);
+        if (data?.[0]) meetingId = data[0].meeting_id;
+      }
+      if (!meetingId && titleHint) {
+        const { data } = await supabase
+          .from("meeting_log")
+          .select("meeting_id")
+          .ilike("meeting_title", `%${titleHint}%`)
+          .order("scheduled_start", { ascending: true })
+          .limit(1);
+        if (data?.[0]) meetingId = data[0].meeting_id;
+      }
+      meetingLinkCache[key] = meetingId;
+      return meetingId;
+    };
+
     // Write to INBOX
     const inboxRows = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
+
+      // Auto-link meeting
+      let linkedMeetingId: string | null = null;
+      if (item.linked_meeting_team || item.linked_meeting_title_hint) {
+        linkedMeetingId = await findMeetingId(item.linked_meeting_team, item.linked_meeting_title_hint);
+      }
 
       // Generate inbox ID
       const { count } = await supabase
@@ -228,6 +263,7 @@ serve(async (req) => {
         calendar_event_title: item.calendar_event_title || null,
         email: item.email || [],
         blocked_by_desc: item.blocked_by_description || null,
+        linked_meeting_id: linkedMeetingId,
         status: "Pending",
       };
 
