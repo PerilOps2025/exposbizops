@@ -26,6 +26,7 @@ export type Database = {
           id: string
           inbox_ref: string | null
           is_meeting_context: boolean | null
+          linked_meeting_id: string | null
           parent_task_id: string | null
           person: string[] | null
           priority: string | null
@@ -53,6 +54,7 @@ export type Database = {
           id?: string
           inbox_ref?: string | null
           is_meeting_context?: boolean | null
+          linked_meeting_id?: string | null
           parent_task_id?: string | null
           person?: string[] | null
           priority?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           id?: string
           inbox_ref?: string | null
           is_meeting_context?: boolean | null
+          linked_meeting_id?: string | null
           parent_task_id?: string | null
           person?: string[] | null
           priority?: string | null
@@ -110,6 +113,7 @@ export type Database = {
           due_date: string | null
           id: string
           inbox_ref: string | null
+          linked_meeting_id: string | null
           parent_task_id: string | null
           person: string[] | null
           priority: string | null
@@ -134,6 +138,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           inbox_ref?: string | null
+          linked_meeting_id?: string | null
           parent_task_id?: string | null
           person?: string[] | null
           priority?: string | null
@@ -158,6 +163,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           inbox_ref?: string | null
+          linked_meeting_id?: string | null
           parent_task_id?: string | null
           person?: string[] | null
           priority?: string | null
@@ -305,6 +311,7 @@ export type Database = {
           inbox_id: string
           invite_person: boolean | null
           is_meeting_context: boolean | null
+          linked_meeting_id: string | null
           master_log_ref: string | null
           parsed_text: string | null
           person: string[] | null
@@ -333,6 +340,7 @@ export type Database = {
           inbox_id: string
           invite_person?: boolean | null
           is_meeting_context?: boolean | null
+          linked_meeting_id?: string | null
           master_log_ref?: string | null
           parsed_text?: string | null
           person?: string[] | null
@@ -361,6 +369,7 @@ export type Database = {
           inbox_id?: string
           invite_person?: boolean | null
           is_meeting_context?: boolean | null
+          linked_meeting_id?: string | null
           master_log_ref?: string | null
           parsed_text?: string | null
           person?: string[] | null
