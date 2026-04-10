@@ -49,7 +49,9 @@ OUTPUT: Return ONLY valid JSON matching this schema exactly:
       "calendar_event_title": "null or title for the calendar event",
       "email": ["attendee@example.com"],
       "blocked_by_description": "null or description",
-      "raw_fragment": "portion of original transcript"
+      "raw_fragment": "portion of original transcript",
+      "linked_meeting_team": "team name if transcript says 'for the next meeting with X team' or 'for the X team meeting', null otherwise",
+      "linked_meeting_title_hint": "meeting title hint if transcript says 'for the next meeting' or 'discuss in the ABC meeting', null otherwise"
     }
   ]
 }
