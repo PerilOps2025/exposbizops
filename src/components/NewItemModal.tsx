@@ -149,7 +149,8 @@ export default function NewItemModal({ open, onClose, onCreated, defaultType = "
             due_date: dueDate || null, due_time: isAllDay ? null : dueTime || null,
             is_meeting_context: true, calendar_event_id: calendarEventId,
             parent_task_id: parentTask?.task_id || null, status: "Active",
-          });
+            linked_meeting_id: linkedMeetingId || null,
+          } as any);
           if (error) throw error;
         }
       } else {
@@ -162,7 +163,8 @@ export default function NewItemModal({ open, onClose, onCreated, defaultType = "
             project_tag: projectTag || null, priority,
             due_date: dueDate || null, due_time: dueTime || null,
             is_meeting_context: isMeetingContext, status: "Pending",
-          });
+            linked_meeting_id: linkedMeetingId || null,
+          } as any);
           if (error) throw error;
           toast.success("Saved to Pending Room");
         } else {
@@ -173,6 +175,8 @@ export default function NewItemModal({ open, onClose, onCreated, defaultType = "
             priority, due_date: dueDate || null, due_time: dueTime || null,
             is_meeting_context: isMeetingContext,
             parent_task_id: parentTask?.task_id || null, status: "Active",
+            linked_meeting_id: linkedMeetingId || null,
+          } as any);
           });
           if (error) throw error;
           toast.success(type === "FollowUp" ? "Follow-up created" : "Task created");
