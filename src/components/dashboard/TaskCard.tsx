@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock, AlertCircle, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, AlertCircle, CheckCircle, ChevronDown, ChevronUp, Link2 } from "lucide-react";
 import { getPriorityEmoji, isOverdue } from "@/lib/supabase-helpers";
 import { format, formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -60,6 +60,11 @@ export default function TaskCard({ task, showOverdue, onTaskCompleted }: TaskCar
                 )}
                 {task.parent_task_id && (
                   <Badge variant="outline" className="text-[10px] h-5 border-primary/30 text-primary">Follow-up</Badge>
+                )}
+                {task.linked_meeting_id && (
+                  <Badge variant="outline" className="text-[10px] h-5 border-accent-foreground/30 gap-0.5">
+                    <Link2 className="w-2.5 h-2.5" /> Meeting
+                  </Badge>
                 )}
               </div>
               {/* Created date & last follow-up */}

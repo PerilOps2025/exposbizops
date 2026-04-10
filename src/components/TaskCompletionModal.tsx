@@ -125,7 +125,8 @@ export default function TaskCompletionModal({ open, onClose, task, onCompleted }
         completion_tags_project_tag: tags.decisionMade ? "decision_made" : null,
         spawned_task_ids: spawnedIds.length > 0 ? spawnedIds : [],
         created_at: task.created_at || null,
-      });
+        linked_meeting_id: task.linked_meeting_id || null,
+      } as any);
       if (archiveError) {
         console.error("Archive error:", archiveError);
         throw new Error(`Failed to archive task: ${archiveError.message}`);

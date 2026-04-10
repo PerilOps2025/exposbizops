@@ -122,7 +122,8 @@ export default function PendingRoom() {
           inbox_ref: merged.inbox_id,
           calendar_event_id: calendarEventId,
           status: 'Active',
-        });
+          linked_meeting_id: (merged as any).linked_meeting_id || null,
+        } as any);
         if (error) throw error;
       } else if (merged.type === 'Decision') {
         const decId = await generateId('DEC', 'decisions', 'decision_id');
