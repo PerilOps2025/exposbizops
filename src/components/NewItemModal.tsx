@@ -38,6 +38,7 @@ export default function NewItemModal({ open, onClose, onCreated, defaultType = "
   const [isAllDay, setIsAllDay] = useState(false);
   // Decision-specific
   const [context, setContext] = useState("");
+  const [validUntil, setValidUntil] = useState("");
   const [saving, setSaving] = useState(false);
 
   if (!open) return null;
@@ -46,7 +47,7 @@ export default function NewItemModal({ open, onClose, onCreated, defaultType = "
     setText(""); setPerson(""); setTeam(parentTask?.team || ""); setProjectTag(parentTask?.project_tag || "");
     setPriority("Med"); setDueDate(""); setDueTime(""); setIsMeetingContext(false);
     setEndDate(""); setEndTime(""); setAttendeeEmails(""); setEventTitle("");
-    setAddMeetLink(true); setIsAllDay(false); setContext("");
+    setAddMeetLink(true); setIsAllDay(false); setContext(""); setValidUntil("");
   };
 
   const handleSave = async (toPending: boolean) => {
@@ -78,8 +79,8 @@ export default function NewItemModal({ open, onClose, onCreated, defaultType = "
             decision_id: decId, user_id: user.id, decision_text: text,
             team: team || null, person: personArr, project_tag: projectTag || null,
             context: context || null, is_meeting_context: isMeetingContext,
-            source: "manual",
-          });
+            source: "manual", valid_until: validUntil || null,
+          } as any);
           if (error) throw error;
           toast.success("Decision recorded");
         }
@@ -238,12 +239,19 @@ export default function NewItemModal({ open, onClose, onCreated, defaultType = "
               placeholder={type === "Decision" ? "What was decided?" : type === "Event" ? "Event description (optional)" : "What needs to be done?"} />
           </div>
 
-          {/* Decision context */}
+          {/* Decision context & validity */}
           {type === "Decision" && (
-            <div>
-              <label className="text-xs text-muted-foreground font-medium">Context</label>
-              <Input value={context} onChange={e => setContext(e.target.value)} className="mt-1" placeholder="Why was this decided?" />
-            </div>
+            <>
+              <div>
+                <label className="text-xs text-muted-foreground font-medium">Context</label>
+                <Input value={context} onChange={e => setContext(e.target.value)} className="mt-1" placeholder="Why was this decided?" />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground font-medium">Valid Until (optional)</label>
+                <Input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} className="mt-1" />
+                <p className="text-[10px] text-muted-foreground mt-0.5">Decision will be flagged as expired after this date</p>
+              </div>
+            </>
           )}
 
           <div className="grid grid-cols-2 gap-3">
