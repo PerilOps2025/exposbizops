@@ -235,11 +235,10 @@ serve(async (req) => {
         linkedMeetingId = await findMeetingId(item.linked_meeting_team, item.linked_meeting_title_hint);
       }
 
-      // Generate inbox ID
-      const { count } = await supabase
-        .from("inbox")
-        .select("*", { count: "exact", head: true });
-      const inboxId = `INB-${String((count || 0) + 1).padStart(3, "0")}`;
+      // Generate inbox ID using timestamp+random for uniqueness
+      const ts = Date.now().toString(36);
+      const rand = Math.random().toString(36).substring(2, 6);
+      const inboxId = `INB-${ts}-${rand}`;
 
       const row = {
         inbox_id: inboxId,

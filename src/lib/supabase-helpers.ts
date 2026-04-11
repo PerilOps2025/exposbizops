@@ -1,11 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export async function generateId(prefix: string, table: string, _idField: string): Promise<string> {
-  const { count } = await supabase
-    .from(table as any)
-    .select('*', { count: 'exact', head: true });
-  const num = (count || 0) + 1;
-  return `${prefix}-${String(num).padStart(3, '0')}`;
+export async function generateId(prefix: string, _table: string, _idField: string): Promise<string> {
+  // Use timestamp + random to guarantee uniqueness (no more count-based collisions)
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).substring(2, 6);
+  return `${prefix}-${ts}-${rand}`;
 }
 
 export function getPriorityColor(priority: string | null) {
